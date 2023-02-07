@@ -1,8 +1,21 @@
+import { defineHidden } from '../../shared/src/helper'
+import { AnimatedValue } from './AnimatedValue'
+
+const $node: any = Symbol.for('Animated:node')
+
+export const isAnimated = <T = any>(value:any): value is Animated<T>=> !!value&&value[$node] === value
+
+/** Get the owner's Animated node. */
+export const getAnimated = <T = any>(owner: any): Animated<T> | undefined => owner && owner[$node]
+
+/** Set the owner's Animated node. */
+export const setAnimated = (owner:any, node: Animated) => defineHidden(owner, $node, node)
+
 export abstract class Animated<T = any> { /** The cache of animated values */
   protected payload?: Payload
 
   constructor() {
-    set
+    setAnimated(this, this)
   }
 
   /** Get the current value. Pass true for only animated values. */
