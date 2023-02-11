@@ -1,7 +1,23 @@
 const $get = Symbol.for('FluidValue.get')
+const $observers = Symbol.for('FluidValue.observers')
+
+export {
+  FluidValue,
+  hasFluidValue,
+  getFluidValue,
+}
+
+/** Returns true if arg can be observed. */
+const hasFluidValue = (arg: any): arg is FluidValue => Boolean(arg && arg[$get])
+
+/**
+ * Get the current value
+ * If arg is not observable, arg is returned
+ * */
+const getFluidValue: GetFluidValue = (arg: any) => arg && arg[$get] ? arg[$get]() : arg
 
 type GetFluidValue = {
-  <T, U = never>(target: T | Flu)
+  <T, U = never>(target: T | FluidValue<U>): Exclude<T, FluidValue> | U
 }
 
 /** Remove the FluidValue type from every property. */
