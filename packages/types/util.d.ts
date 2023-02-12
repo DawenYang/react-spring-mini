@@ -17,3 +17,5 @@ export type Constrain<T, U> = [T] extends [Any] ? U : [T] extends [U] ? T : U
 export interface Lookup<T = any> {
   [key: string]: T
 }
+
+export type OneOrMore<T> = T | readonly T[]

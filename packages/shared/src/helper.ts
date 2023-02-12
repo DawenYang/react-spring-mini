@@ -45,3 +45,8 @@ export function eachProp<T extends object, This>(obj: T, fn: (this: This, value:
     }
   }
 }
+
+export const isSSR = () =>
+  typeof window === 'undefined' ||
+  !window.navigator ||
+  /ServerSideRendering|^Deno\//.test(window.navigator.userAgent)

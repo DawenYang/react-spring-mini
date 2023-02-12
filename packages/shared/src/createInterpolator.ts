@@ -6,6 +6,7 @@ import {
   InterpolatorFn,
 } from '../../types/interpolation'
 import { is } from './helper'
+import * as G from './globals'
 
 export const createInterpolator: InterpolatorFactory = (
   range: readonly number[] | InterpolatorFn<any, any> | InterpolatorConfig<any>,
