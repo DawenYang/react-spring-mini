@@ -19,3 +19,22 @@ export interface Lookup<T = any> {
 }
 
 export type OneOrMore<T> = T | readonly T[]
+
+export type ElementType<P = any> =
+  | React.ElementType<P>
+  | LeafFunctionComponent<P>
+
+// Function component without children
+type LeafFunctionComponent<P> = {
+  (props: P): ReactElement | null
+  displayName?: string
+}
+
+export type ComponentPropsWithRef<T extends ElementType> =
+  T extends React.ComponentClass<infer P>
+    ? React.PropsWithoutRef<P> & React.RefAttributes<InstanceType<T>>
+    : React.PropsWithRef<React.ComponentProps<T>>
+
+export type ComponentType<P = {}> =
+  | React.ComponentClass<P>
+  | LeafFunctionComponent<P>
