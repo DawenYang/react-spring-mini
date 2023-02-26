@@ -1,12 +1,13 @@
-import { forwardRef, Ref, useCallback, useRef } from 'react'
+import { forwardRef, Ref, useCallback, useEffect, useRef } from 'react'
 import { HostConfig } from './createHost'
-import { is } from '../../shared/src/helper'
+import { each, is } from '../../shared/src/helper'
 import { ElementType } from '../../types/util'
 import { AnimatedObject } from './AnimatedObject'
-import { FluidEvent, FluidValue } from '../../shared/src/fluids'
+import { addFluidObserver, FluidEvent, FluidValue, removeFluidObserver } from '../../shared/src/fluids'
 import { TreeContext } from './context'
-import { Animated, getAnimated } from './Animated'
 import { useForceUpdate } from '../../shared/src/hooks/useForceUpdate'
+import { useIsomorphicLayoutEffect } from '../../shared/src/hooks/useIsomorphicLayoutEffect'
+import { useOnce } from '../../shared/src/hooks/useOnce'
 
 export type AnimatableComponent = string | Exclude<ElementType, string>
 
@@ -50,15 +51,44 @@ export const withAnimated = (Component: any, host: HostConfig) => {
       }
     }
 
-    const observer = new Prop
+    const observer = new PropsObserver(callback, deps)
+    const observerRef = useRef<PropsObserver>()
+    useIsomorphicLayoutEffect(() => {
+      observerRef.current = observer
+
+      // Observer the latest dependencies.
+      each(deps, dep => addFluidObserver(dep, observer))
+      return () => {
+        // Stop observing previous dependencies.
+        if (observerRef.current) {
+          each(observerRef.current?.deps, dep => {
+            removeFluidObserver(dep, observerRef.current!)
+          })
+          raf.cancel(observerRef.current?.update)
+        }
+      }
+    })
+
+    useEffect(callback, [])
+    // Stop observing on unmount.
+    useOnce(() => {
+      const observer = observerRef.current!
+      each(observer.deps, dep => removeFluidObserver(dep, observer))
+    })
+
+    const usedProps = host.getComponentProps(props.getValue())
+    return <Component {...usedProps} ref={ref} />
   })
+
 }
 
 class PropsObserver {
-  constructor(readonly update: ()=>void, readonly deps: Set<FluidValue>) {}
-  eventObserved(event:FluidEvent) {
-    if (event.type == 'change'){
-      raf.
+  constructor(readonly update: () => void, readonly deps: Set<FluidValue>) {
+  }
+
+  eventObserved(event: FluidEvent) {
+    if (event.type == 'change') {
+      raf.write(this.update)
     }
   }
 }
